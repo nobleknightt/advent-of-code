@@ -5,24 +5,52 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
 
-func isSafe(prev, curr int) bool {
-	if (prev < 0 && curr > 0) || (prev > 0 && curr < 0) {
-		return false
+func solvePartOne(input [][]int) int {
+	var left, right []int
+
+	for _, line := range input {
+		left = append(left, line[0])
+		right = append(right, line[1])
 	}
 
-	var currAbs = int64(math.Abs(float64(curr)))
-	if currAbs < 1 || currAbs > 3 {
-		return false
+	sort.Ints(left)
+	sort.Ints(right)
+
+	var totalDistance = 0
+	for i := 0; i < len(left); i++ {
+		totalDistance += int(math.Abs(float64(left[i] - right[i])))
 	}
 
-	return true
+	return totalDistance
+}
+
+func solvePartTwo(input [][]int) int {
+	var left []int
+
+	var count map[int]int
+	count = make(map[int]int)
+
+	for _, line := range input {
+		left = append(left, line[0])
+		count[line[1]]++
+	}
+
+	var similarityScore = 0
+	for _, value := range left {
+		similarityScore += value * count[value]
+	}
+
+	return similarityScore
 }
 
 func main() {
+	var input [][]int
+
 	var scanner = bufio.NewScanner(os.Stdin)
 	// By default, bufio.Scanner uses bufio.ScanLines as the split function,
 	// which means it reads the input line by line. Each time you call scanner.Scan(),
@@ -37,41 +65,23 @@ func main() {
 	// If scanner.Err() returns nil, it means the input ended normally (EOF),
 	// otherwise, it indicates an error occurred during scanning.
 
-	var numSafeReports = 0
-
 	for scanner.Scan() {
 		var line = scanner.Text()
-		var values = strings.Fields(line)
-
-		var report []int
-		for _, value := range values {
+		var values []int
+		for _, value := range strings.Fields(line) {
 			var valueAsInt, _ = strconv.Atoi(value)
-			report = append(report, valueAsInt)
+			values = append(values, valueAsInt)
 		}
-
-		var diff = report[0] - report[1]
-		var diffAbs = int64(math.Abs(float64(diff)))
-		if diffAbs < 1 || diffAbs > 3 {
-			continue
-		}
-
-		var isReportSafe = true
-		for i := 1; i < len(report); i++ {
-			var currDiff = report[i-1] - report[i]
-			if !isSafe(diff, currDiff) {
-				isReportSafe = false
-				break
-			}
-		}
-
-		if isReportSafe {
-			numSafeReports++
-		}
+		input = append(input, values)
 	}
 
 	if err := scanner.Err(); err != nil {
 		return
 	}
 
-	fmt.Println(numSafeReports)
+	var partOneAnswer = solvePartOne(input)
+	fmt.Println(partOneAnswer)
+
+	var partTwoAnswer = solvePartTwo(input)
+	fmt.Println(partTwoAnswer)
 }
